@@ -6,7 +6,9 @@ import domain.models.Customer;
 import domain.models.ProfilePhoto;
 import domain.repositories.CustomerQuery;
 import domain.repositories.CustomerRepository;
+import jakarta.enterprise.context.ApplicationScoped;
 
+@ApplicationScoped
 public class HibernateCustomerRepository implements CustomerRepository {
 
   @Override
