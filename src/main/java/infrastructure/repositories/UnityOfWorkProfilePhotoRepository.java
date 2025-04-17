@@ -23,7 +23,7 @@ public class UnityOfWorkProfilePhotoRepository implements ProfilePhotoRepository
 
     @Override
     public void registerEntities(Map<String, ProfilePhoto> entities) {
-
+        this.entities = entities;
     }
 
     @Override

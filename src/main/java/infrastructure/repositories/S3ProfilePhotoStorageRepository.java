@@ -17,7 +17,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
-import static io.netty.util.internal.PlatformDependent.putObject;
 
 @ApplicationScoped
 public class S3ProfilePhotoStorageRepository implements ProfilePhotoStorageRepository {
