@@ -2,6 +2,7 @@ package infrastructure.repositories;
 
 import domain.models.ProfilePhoto;
 import domain.repositories.ProfilePhotoRepository;
+import infrastructure.rest.StableDiffusionService;
 import jakarta.enterprise.context.RequestScoped;
 
 import java.util.Map;
@@ -12,12 +13,15 @@ public class UnityOfWorkProfilePhotoRepository implements ProfilePhotoRepository
 
     private final HibernateProfilePhotoPersistenceRepository persistenceRepository;
     private final S3ProfilePhotoStorageRepository storageRepository;
+    private final StableDiffusionService stableDiffusionService;
     private Map<String, ProfilePhoto> entities;
 
     public UnityOfWorkProfilePhotoRepository(HibernateProfilePhotoPersistenceRepository persistenceRepository,
-                                             S3ProfilePhotoStorageRepository storageRepository) {
+                                             S3ProfilePhotoStorageRepository storageRepository,
+                                             StableDiffusionService stableDiffusionService) {
         this.persistenceRepository = persistenceRepository;
         this.storageRepository = storageRepository;
+        this.stableDiffusionService = stableDiffusionService;
         this.entities = Map.of();
     }
 
@@ -32,8 +36,11 @@ public class UnityOfWorkProfilePhotoRepository implements ProfilePhotoRepository
             try{
                 persistenceRepository.save(customerId, profilePhoto);
 
-                var url = storageRepository.store(customerId, profilePhoto).await().indefinitely();
-                var updated = new ProfilePhoto(profilePhoto.id(), url, profilePhoto.generatedPhoto());
+                var generated = stableDiffusionService.generate(profilePhoto).await().indefinitely();
+                var originalS3 = storageRepository.store(customerId, profilePhoto).await().indefinitely();
+                var generatedS3 = storageRepository.store(customerId, profilePhoto, generated).await().indefinitely();
+
+                var updated = new ProfilePhoto(profilePhoto.id(), originalS3, generatedS3);
 
                 persistenceRepository.save(customerId, updated);
             }
